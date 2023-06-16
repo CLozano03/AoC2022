@@ -1,0 +1,6 @@
+#Settings
+.vscode/
+
+#Todos los bin
+*.exe
+*.class
