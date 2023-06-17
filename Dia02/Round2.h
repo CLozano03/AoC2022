@@ -1,0 +1,1 @@
+int singleRound2(char op, char res);
