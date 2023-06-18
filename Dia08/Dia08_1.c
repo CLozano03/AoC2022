@@ -70,21 +70,13 @@ void parse_file(FILE* f, int** forest){
     char read;
     for(i = 0; i < FOREST_SIZE; i++){
         fgets(linea, FOREST_SIZE + 2, f);
-        linea[strlen(linea)-1] = '\0';
-        if(i == 98)
-            printf("%s", linea);
+        /* Quinamos los \n. En la ultima linea hay EOF*/
+        if(i != 98)
+            linea[strlen(linea)-1] = '\0';
+        /* Metemos el digito en la matriz */
         for(j = 0; j < FOREST_SIZE; j++){
             forest[i][j] = linea[j] - '0';
         }
-    }
-}
-
-void imprimirMatriz(int** matriz) {
-    for (int i = 0; i < FOREST_SIZE; i++) {
-        for (int j = 0; j < FOREST_SIZE; j++) {
-            printf("%d", matriz[i][j]);
-        }
-        printf("\n");
     }
 }
 
@@ -107,11 +99,7 @@ int main(int argc, char* argv[]){
     /* Parseo de archivo */
     parse_file(f, forest);
     fclose(f); 
-
-
-    //imprimirMatriz(forest);
-    printf("\n%d", forest[98][0]);
-
+    
     /* Operacion de cuenta */
     int visible_trees = count_visible_trees(forest);
 
