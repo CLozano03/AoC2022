@@ -49,6 +49,7 @@ int main(int argc, char* argv[]){
     }
 
     int signal_strength_sum = run_instructions(f);
+    fclose(f);
     
     /* Imprimir resultado */
     printf("\n--------------------------------\nLa fuerza de senial final es: %d", signal_strength_sum);
