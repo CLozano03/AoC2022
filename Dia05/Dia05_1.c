@@ -195,4 +195,5 @@ int main(int argc, char* argv[]){
 
     /* Liberar memoria dinamica */
     printf("Free Stacks: %d", free_stacks(stacks[0]));
+    return 0;
 }
