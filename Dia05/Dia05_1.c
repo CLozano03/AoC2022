@@ -143,16 +143,6 @@ void parse_movements(FILE *f, Stack* stacks[]){
     }
 }
 
-void print_stack(Stack* stacks[], int i){
-
-    Node* aux = stacks[i] -> top;
-    while(aux != NULL){
-        printf("%c ", aux -> data);
-        aux = aux -> below;
-    }
-    printf("\n");   
-}
-
 void print_result(Stack* stacks[]){
     int i;
     char c;
