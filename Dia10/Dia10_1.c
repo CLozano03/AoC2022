@@ -14,14 +14,14 @@ int run_instructions(FILE* f){
     int cycle = 1;
     int x = 1;
     int value_to_add;
-    int signal_strength_sum = 0;
+int signal_strength_sum = 0;
 
     while(fgets(read, MAX_READ, f)){
         /* Detectamos si se trata de un addx */
         value_to_add = 0; /* Reiniciamos el valor a sumar */
         if(read[0] == 'a'){
 
-            sscanf(read, "%s %d", read, &value_to_add); /* Cojo el valor a sumar */
+            sscanf(read, "addx %d", &value_to_add); /* Cojo el valor a sumar */
             cycle++;
             if(cycle%40 == 20){
                 signal_strength_sum += cycle * x;
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
     fclose(f);
     
     /* Imprimir resultado */
-    printf("\n--------------------------------\nLa fuerza de senial final es: %d", signal_strength_sum);
+    printf("\n--------------------------------\nLa fuerza de senial final es: %d\n", signal_strength_sum);
 
     return 0;
 }
