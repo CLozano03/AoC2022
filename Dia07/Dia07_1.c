@@ -1,82 +1,96 @@
 /**
- *  Compilar: gcc Dia07_1.c -o Dia07_1
+ *  Compilar: gcc Dia07_1.c tree.c -o Dia07_1
  *  Ejecutar: Dia07_1.exe input.txt
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-/*  */
-/* 
-- / (dir)
-  - a (dir)
-    - e (dir)
-      - i (file, size=584)
-    - f (file, size=29116)
-    - g (file, size=2557)
-    - h.lst (file, size=62596)
-  - b.txt (file, size=14848514)
-  - c.dat (file, size=8504156)
-  - d (dir)
-    - j (file, size=4060174)
-    - d.log (file, size=8033020)
-    - d.ext (file, size=5626152)
-    - k (file, size=7214296)
- */
+#include "tree.h"
+
+#define MAX_READ 32
+#define MAX_SIZE 100000
 /* ---------------------------------------------------------------------------------------- */
-/* Defino mis estructuras que me permiten crear un arbol combinando todas ellas */
-typedef struct _file {
-    char *name;
-    int size;
-} file;
+/* Funcion de procesado del archivo */
+tree *parse_file(FILE *f){
+    /* Variables auxiliares */
+    char read[MAX_READ + 1];
+    int n_campo, leidas = 0, buff_size;
+    char *token;
+    char dir_new[MAX_READ + 1];
+    char file_new[MAX_READ + 1];
+    
+    tree *t = create_tree();
+    dir *current_dir = NULL;
 
-typedef struct _dir {
-    char *name;
-    struct _dir *subdirs[];
-    struct _file *files[];
-} dir;
+    /* PROCESADO DEL FICHERO */
+    while(fgets(read, MAX_READ, f)){
+        /* Elimino el salto de linea */
+        if(read[strlen(read) - 1] == '\n')
+            read[strlen(read) - 1] = '\0';
 
-typedef struct _tree {
-    struct _dir *root;
-} tree;
+        if(read[0] == '$'){
+            /* Es un comando */
 
-/* ---------------------------------------------------------------------------------------- */
-/* Funciones para crear y destruir los elementos de mi arbol */
-dir *create_dir(char *name) {
-    dir *d = malloc(sizeof(dir));
-    d->name = malloc(sizeof(char) * strlen(name));
-    strcpy(d->name, name);
-    d->subdirs = NULL;
-    d->files = NULL;
-    return d;
-}
+            if(read[2] == 'c'){
+                /* Comando cd */
+                token = strtok(read, " ");
+                n_campo = 1;
 
-file *create_file(char *name, int size) {
-    file *f = malloc(sizeof(file));
-    f->name = malloc(sizeof(char) * strlen(name));
-    strcpy(f->name, name);
-    f->size = size;
-    return f;
-}
+                /* Busco el directorio objetivo */
+                while(token != NULL){
+                    if(n_campo == 3){
+                        strcpy(dir_new,token);
+                        break;
+                    }
+                    token = strtok(NULL, " ");
+                    n_campo++;
+                }
 
-/* ---------------------------------------------------------------------------------------- */
-/* Funciones para agregar elementos a mi arbol */
-void add_dir(dir* d, dir* subdir) {
-    if (d->subdirs == NULL) {
-        d->subdirs = malloc(sizeof(dir));
-        d->subdirs = subdir;
-    } else {
-        dir *aux = d->subdirs;
-        while (aux->subdirs != NULL) {
-            aux = aux->subdirs;
+                /* Ejecuto comando */
+                current_dir = cd(dir_new, current_dir, t);
+            } else if(read[2] == 'l')
+                /* Comando ls */{
+            } else {
+                fprintf(stderr, "Comando no reconocido\n");
+                exit(1);
+            }
+        } else {
+            if(read[0] == 'd'){
+                /* Creacion de un nuevo directorio */
+                sscanf(read, "dir %s", &dir_new);
+                mkdir(dir_new, current_dir, t);
+            } else {
+                /* Creacion de un nuevo fichero */
+                sscanf(read, "%lld %s", &buff_size, file_new);
+                touch(file_new, buff_size, current_dir);
+            }
         }
-        aux->subdirs = malloc(sizeof(dir));
-        aux->subdirs = subdir;
+        leidas++;
     }
+    
+    printf("Fin de la lectura del archivo. Lineas leidas: %d\n", leidas);
+    
+    return t;
 }
-/* ---------------------------------------------------------------------------------------- */
-/* Funcion de procesado del archivo, mientras suma los tamaños de los ficheros*/
-int create_tree(FILE* f, ){
 
+long long find_all(dir* current_dir, long long *total_sum){
+    int i;
+    long long sum_buff = 0;
+    long long subdir_sum;
+
+    /* Suma archivos */
+    for (i = 0; i < current_dir->num_files; i++) {
+        sum_buff += current_dir->files[i]->size;
+    }
+
+    i = strcmp(current_dir->name, "/") == 0? 0 : 1;
+    /* Suma subdirectorios */
+    for (; i < current_dir->num_subdirs; i++) {
+        subdir_sum = find_all(current_dir->subdirs[i], total_sum);
+        sum_buff += subdir_sum;
+    }
+    if(sum_buff <= MAX_SIZE){
+        *total_sum += sum_buff;
+    }   
+
+    return sum_buff;
 }
 
 /* ---------------------------------------------------------------------------------------- */
@@ -89,11 +103,20 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
-    /* int res = find_start_marker(f);
-
-    /* Devolver la salida
-    fprintf(stdout, "El primer 'start-of-packet marker' esta a partir de: %d", res); */
-
+    tree* t = parse_file(f);
     fclose(f);
+
+    /* Buscar todos los ficheros desde la raiz que cumplan la condicion*/
+    long long total_sum = 0;
+    long long res = find_all(t->root, &total_sum);
+
+    /* Imprimir resultado */
+    printf("---------------------------------------------------\n");
+    printf("Suma de tamannos de directorios: %lld\n", total_sum);
+
+    /* Liberar memoria */
+    free_tree(t->root);
+    printf("\nArbol liberado con exito\n");
+       
     return 0;
 }
